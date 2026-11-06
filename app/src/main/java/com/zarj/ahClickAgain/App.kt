@@ -8,6 +8,5 @@ class App: Application() {
     override fun onCreate() {
         super.onCreate()
         SaveManager.init(applicationContext)
-        DataEngine.init(applicationContext)
     }
 }
