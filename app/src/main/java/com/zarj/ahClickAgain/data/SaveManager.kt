@@ -2,75 +2,144 @@ package com.zarj.ahClickAgain.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.provider.ContactsContract.Data
 import android.util.Log
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.byteArrayPreferencesKey
+import androidx.datastore.preferences.core.edit
 import com.zarj.ahClickAgain.Player
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.io.File
+import java.util.concurrent.CancellationException
+import java.util.concurrent.atomic.AtomicBoolean
 
 object SaveManager {
-    private const val PREFS_NAME = "SHKOTEL"
-    private const val AUTO_SAVE_INTERVAL = 5000L
+    private const val SAVE_INTERVAL_MS = 3000L
 
-    private lateinit var prefs: SharedPreferences
+    private lateinit var dataStore: DataStore<Preferences>
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val saveMutex = Mutex()
 
-    @Volatile private var dirty = false
-    @Volatile private var lastSaveTime = 0L
+    private val dirty = AtomicBoolean(false)
+    private var saveJob: Job? = null
 
+    private val STATE_KEY = byteArrayPreferencesKey("game_state")
+
+    private val json = Json {
+        ignoreUnknownKeys = true
+        encodeDefaults = false
+    }
+
+    /** Какие поля считаем HIGH-приоритетом. Всё остальное — LOW. */
+
+
+    /** Инициализация и загрузка с диска. Вызывается из App.onCreate. */
     fun init(context: Context) {
-        prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-    }
-
-    fun markDirty() { dirty = true }
-
-    /** Вызывать из фонового цикла раз в ~секунду */
-    fun autoSaveIfNeeded() {
-        if (!dirty) return
-        if (System.currentTimeMillis() - lastSaveTime < AUTO_SAVE_INTERVAL) return
-
-        dirty = false
-        lastSaveTime = System.currentTimeMillis()
-        scope.launch { persist(useCommit = false) }
-    }
-
-    /** Критичные события: покупка, босс, перерождение. Без дебаунса. */
-    fun saveImmediate() {
-        dirty = false
-        lastSaveTime = System.currentTimeMillis()
-        scope.launch { persist(useCommit = true) }
-    }
-
-    /** Lifecycle: onStop — самый надёжный момент */
-    fun saveBlocking() {
-        dirty = false
-        lastSaveTime = System.currentTimeMillis()
-        persist(useCommit = true) // синхронно, но onStop не блокирует UI так критично
-    }
-
-    private fun persist(useCommit: Boolean) {
-        val e = prefs.edit()
-        e.putLong("coins", Player.coins)
-        e.putLong("diamonds", Player.diamond)
-        e.putLong("damage", Player.damage)
-        e.putInt("rebirth", Player.rebirthes)
-        e.putLong("reb_coins", Player.reb_coins)
-        e.putLong("dps", Player.dps)
-        e.putString("level", Player.on_level.getFullId())
-        e.putInt("exp", Player.on_level.getExp())
-        e.putString("weapon", Player.weapon.getId())
-        if (useCommit) {
-            val ok = e.commit()
-            if (!ok) Log.e("SaveManager", "commit failed")
-        } else {
-            e.apply()
+        dataStore = PreferenceDataStoreFactory.create(
+            produceFile = { File(context.filesDir, "datastore/game_state.preferences_pb") }
+        )
+        scope.launch {
+            val loaded = loadFromDisk()
+            DataEngine.restore(loaded)
+            startObserving()
         }
     }
 
-    fun load(context: Context) {
-        init(context)
-        // делегируем в старую полную загрузку, пока Player не разобран
-        Player.loadFromSharedPer(prefs)
+    private suspend fun loadFromDisk(): GameState {
+        val prefs = dataStore.data.first()
+        val bytes = prefs[STATE_KEY] ?: return GameState()
+        return try {
+            json.decodeFromString<GameState>(bytes.decodeToString())
+        } catch (e: Exception) {
+            println("Failed to parse state, using default: ${e.message}")
+            GameState()
+        }
     }
+
+    private fun startObserving() {
+        scope.launch {
+            DataEngine.state
+                .map { it.toHighPriority() }
+                .distinctUntilChanged()   // ← отсекает всё, где HIGH-поля не менялись
+                .drop(1)                  // ← пропускаем текущее значение при подписке
+                .collect {
+                    saveNow(DataEngine.state.value)
+                }
+        }
+
+        // LOW: любой изменение → dirty
+        scope.launch {
+            DataEngine.state
+                .drop(1)
+                .collect {
+                    markDirty()
+                }
+        }
+    }
+
+    private fun markDirty() {
+        dirty.set(true)
+        if (saveJob?.isActive == true) return
+        saveJob = scope.launch {
+            delay(SAVE_INTERVAL_MS)
+            if (dirty.getAndSet(false)) {
+                saveNow(DataEngine.state.value)
+            }
+        }
+    }
+
+    private suspend fun saveNow(state: GameState) {
+        saveMutex.withLock {
+            dirty.set(false)   // ← сбрасываем, потому что только что сохранили
+            val bytes = json.encodeToString(state).encodeToByteArray()
+            dataStore.edit { prefs -> prefs[STATE_KEY] = bytes }
+        }
+    }
+
+    /** Для onStop() — блокирующее сохранение */
+    fun saveBlocking() = runBlocking {
+        if (dirty.getAndSet(false)) {
+            saveNow(DataEngine.state.value)
+        }
+    }
+    private data class HighPrioritySnapshot(
+        val pets: List<Pet>,
+        val rebirths: Int,
+        val damage: Long
+    )
+
+    private fun GameState.toHighPriority() = HighPrioritySnapshot(
+        pets = pets,
+        rebirths = rebirths,
+        damage = damage
+    )
+
+
+
+
+
+
+
+
+
+
 }
