@@ -1,16 +1,17 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 android {
-    namespace = "com.zarj.zaebalo"
+    namespace = "com.zarj.ahClickAgain"
     compileSdk = 34
 
 
     defaultConfig {
-        applicationId = "com.zarj.zaebalo"
-        minSdk = 21
+        applicationId = "com.zarj.ahClickAgain"
+        minSdk = 23
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -69,4 +70,5 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 }
