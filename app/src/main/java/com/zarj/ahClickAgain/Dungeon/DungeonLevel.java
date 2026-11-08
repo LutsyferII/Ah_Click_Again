@@ -3,47 +3,43 @@ package com.zarj.ahClickAgain.Dungeon;
 import com.zarj.ahClickAgain.Dungeon.enemys.Boss;
 import com.zarj.ahClickAgain.Dungeon.enemys.EnemyMob;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
 
-public class DungeonLevel implements Serializable {
+public class DungeonLevel {
 
-    private static final long serialVersionUID = 1L;
-    static Random rand = new Random();
-    Dungeon dung;
-    final int id;
+
+    String dungID;
+    final String id;
     int exp = 0;
-    int need_exp = 10;
-
-
+    int need_exp;
 
     String back_id = "back_1_1";
 
     public List<String> mobs = new ArrayList<>();
     String boss;
 
-    public DungeonLevel(int id,int exp, Collection<String> mobs,String boss, Dungeon dungeon){
+    public DungeonLevel(String id,int exp, Collection<String> mobs,String boss, String dungeon){
         this.id = id;
         this.need_exp = exp;
         this.mobs.clear();
         this.mobs.addAll(mobs);
         this.boss = boss;
-        this.dung = dungeon;
+        this.dungID = dungeon;
     }
-    public DungeonLevel(int id,int exp, Collection<String> mobs,String boss, Dungeon dungeon,String back_id){
+    public DungeonLevel(String id,int exp, Collection<String> mobs,String boss, String dungeon,String back_id){
         this.id = id;
         this.need_exp = exp;
         this.mobs.clear();
         this.mobs.addAll(mobs);
         this.boss = boss;
-        this.dung = dungeon;
+        this.dungID = dungeon;
         this.back_id = back_id;
     }
     public DungeonLevel clone(){
-        return new DungeonLevel(id,need_exp,mobs,boss,dung,back_id);
+        return new DungeonLevel(id,need_exp,mobs,boss, dungID,back_id);
     }
 
     public boolean setExp(int exp){
@@ -55,12 +51,10 @@ public class DungeonLevel implements Serializable {
             return false;
         }
     }
-    public void setDungeon(Dungeon dungeon){
-        this.dung = dungeon;
+    public void setDungeon(String dungeon){
+        this.dungID = dungeon;
     }
-    public Dungeon getDung(){
-        return dung;
-    }
+
 
     public void setBackgroundId(String id){
         this.back_id = id;
@@ -83,6 +77,11 @@ public class DungeonLevel implements Serializable {
         }
     }
     public DungeonLevel getNextLevel(){
+        final Dungeon dung = DungeonManager.getDungeon(dungID);
+        if(dung == null){
+            System.out.println("Error: dung is not exist");
+            return null;
+        }
         if(!dung.isLastLevel(this.id)){
             System.out.println("NOT LAST");
             return dung.getNextLevel(id);
@@ -93,15 +92,13 @@ public class DungeonLevel implements Serializable {
             System.out.println("NOT HAS NEXT");
             return null;
         }
-
-
     }
 
-    public int getId(){
+    public String getId(){
         return id;
     }
     public String getFullId(){
-        return dung.id+":"+id;
+        return dungID+":"+id;
     }
     public int getExp(){
         return exp;
@@ -113,8 +110,8 @@ public class DungeonLevel implements Serializable {
         return DungeonManager.getBoss(this.boss).clone();
     }
 
-    public boolean checkId(int id){
-        return (this.id==id);
+    public boolean checkId(String id){
+        return (this.id.equals(id));
     }
 
 

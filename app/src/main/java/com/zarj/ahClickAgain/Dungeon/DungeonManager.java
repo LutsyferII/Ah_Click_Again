@@ -1,8 +1,13 @@
 package com.zarj.ahClickAgain.Dungeon;
 
+import android.content.Context;
+
 import com.zarj.ahClickAgain.Datar;
 import com.zarj.ahClickAgain.Dungeon.enemys.Boss;
 import com.zarj.ahClickAgain.Dungeon.enemys.EnemyMob;
+import com.zarj.ahClickAgain.data.JsonLoader;
+import com.zarj.ahClickAgain.data.configs.DungeonConfig;
+import com.zarj.ahClickAgain.data.configs.LevelConfig;
 import com.zarj.ahClickAgain.utils.RollSlot;
 
 import java.util.ArrayList;
@@ -18,10 +23,13 @@ import java.util.Set;
 
 public class DungeonManager {
     static Random rand = new Random();
-    static List<Dungeon> dungeons = new ArrayList<>();
+    //static List<Dungeon> dungeons = new ArrayList<>();
+
+    static HashMap<String,Dungeon> dungeons = new HashMap();
+    static HashMap<String,DungeonLevel> levels = new HashMap();
     static HashMap<String,EnemyMob> mobs = new HashMap();
     static HashMap<String,Boss> bosses = new HashMap();
-    public static void create(){
+    public static void create(Context context){
         dungeons.clear();
         mobs.clear();
         bosses.clear();
@@ -33,21 +41,55 @@ public class DungeonManager {
             bosses.put(entry.getKey(),new Boss(entry.getKey(),entry.getValue()));
             System.out.println("СОЗДАН Boss: "+entry.getKey());
         }
-        DungeonLevel level1 = new DungeonLevel(1,50, Arrays.asList("mob_1_1_0","mob_1_1_1"),"boss_1_1",null );
-        DungeonLevel level2 = new DungeonLevel(2,120, Arrays.asList("mob_1_2_0","mob_1_2_1"),"boss_1_2",null,"back_1_2" );
-        DungeonLevel level3 = new DungeonLevel(1,250, Arrays.asList("mob_2_1_0","mob_2_1_1","mob_2_1_2"),"boss_2_1",null,"back_1_3" );
-        DungeonLevel level4 = new DungeonLevel(2,1000, Arrays.asList("mob_2_2_0","mob_2_2_1","mob_2_2_2","mob_2_2_3"),"boss_2_2",null,"back_1_4" );
 
-        DungeonLevel level5 = new DungeonLevel(3,4000, Arrays.asList("mob_2_3_0","mob_2_3_1","mob_2_3_2"),"boss_2_3",null,"back_1_5" );
-        DungeonLevel level6 = new DungeonLevel(4,20000, Arrays.asList("mob_2_4_0","mob_2_4_1","mob_2_4_2","mob_2_4_3"),"boss_2_4",null,"back_1_6" );
-        DungeonLevel level7 = new DungeonLevel(1,80000, Arrays.asList("mob_3_1_0","mob_3_1_1","mob_3_1_2"),"boss_3_1",null,"back_1_7" );
-        DungeonLevel level8 = new DungeonLevel(2,200000, Arrays.asList("mob_3_2_0","mob_3_2_1","mob_3_2_2"),"boss_3_2",null,"back_1_8" );
-        DungeonLevel level9 = new DungeonLevel(3,500000, Arrays.asList("mob_3_3_0","mob_3_3_1","mob_3_3_2"),"boss_3_3",null,"back_1_9" );
+        Map<String, LevelConfig> levelsConfig = JsonLoader.INSTANCE.loadLevels(context);
+        for (Map.Entry<String, LevelConfig> entry : levelsConfig.entrySet()) {
+            String id = entry.getKey();
+            LevelConfig config = entry.getValue();
+
+            DungeonLevel level = new DungeonLevel(
+                    id,
+                    config.getNeedExp(),
+                    config.getMobIds(),
+                    config.getBossId(),
+                    null,
+                    config.getBackgroundId()
+            );
+            levels.put(id, level);
+        }
+
+        Map<String, DungeonConfig> dungeonsConfig = JsonLoader.INSTANCE.loadDungeons(context);
+        for (Map.Entry<String, DungeonConfig> entry : dungeonsConfig.entrySet()) {
+            String id = entry.getKey();
+            DungeonConfig config = entry.getValue();
+            Dungeon dungeon = new Dungeon(
+                    id,
+                    config.getName(),
+                    config.getLevelIds() // Тут List<String>, а не List<DungeonLevel>
+            );
+            dungeons.put(id, dungeon);
+        }
+
+        System.out.println("Загружено уровней: " + levels.size());
+        System.out.println("Загружено данжей: " + dungeons.size());
 
 
-        dungeons.add(new Dungeon("first","Первое подземелье",Arrays.asList(level1,level2)));
-        dungeons.add(new Dungeon("avali","Вторжение авалей",Arrays.asList(level3,level4,level5,level6)));
-        dungeons.add(new Dungeon("rept","Вторжение рептилий",Arrays.asList(level7,level8,level9)));
+
+//        DungeonLevel level1 = new DungeonLevel("level_1",50, Arrays.asList("mob_1_1_0","mob_1_1_1"),"boss_1_1",null,"back_1_1");
+//        DungeonLevel level2 = new DungeonLevel("level_2",120, Arrays.asList("mob_1_2_0","mob_1_2_1"),"boss_1_2",null,"back_1_2" );
+//        DungeonLevel level3 = new DungeonLevel("level_3",250, Arrays.asList("mob_2_1_0","mob_2_1_1","mob_2_1_2"),"boss_2_1",null,"back_1_3" );
+//        DungeonLevel level4 = new DungeonLevel("level_4",1000, Arrays.asList("mob_2_2_0","mob_2_2_1","mob_2_2_2","mob_2_2_3"),"boss_2_2",null,"back_1_4" );
+//
+//        DungeonLevel level5 = new DungeonLevel("level_5",4000, Arrays.asList("mob_2_3_0","mob_2_3_1","mob_2_3_2"),"boss_2_3",null,"back_1_5" );
+//        DungeonLevel level6 = new DungeonLevel("level_6",20000, Arrays.asList("mob_2_4_0","mob_2_4_1","mob_2_4_2","mob_2_4_3"),"boss_2_4",null,"back_1_6" );
+//        DungeonLevel level7 = new DungeonLevel("level_7",80000, Arrays.asList("mob_3_1_0","mob_3_1_1","mob_3_1_2"),"boss_3_1",null,"back_1_7" );
+//        DungeonLevel level8 = new DungeonLevel("level_8",200000, Arrays.asList("mob_3_2_0","mob_3_2_1","mob_3_2_2"),"boss_3_2",null,"back_1_8" );
+//        DungeonLevel level9 = new DungeonLevel("level_9",500000, Arrays.asList("mob_3_3_0","mob_3_3_1","mob_3_3_2"),"boss_3_3",null,"back_1_9" );
+//
+//
+//        dungeons.put("first",new Dungeon("first","Первое подземелье",Arrays.asList("level_1","level_2")));
+//        dungeons.put("avali",new Dungeon("avali","Вторжение авалей",Arrays.asList("level_3","level_4","level_5","level_6")));
+//        dungeons.put("rept",new Dungeon("rept","Вторжение рептилий",Arrays.asList("level_7","level_8","level_9")));
 
         /*
         Collection<EnemyMob> mobs1 = Arrays.asList(
@@ -133,12 +175,7 @@ public class DungeonManager {
     }
 
     public static Dungeon getDungeon(String id){
-        for(Dungeon dung : dungeons){
-            if(dung.equalsId(id)){
-                return dung;
-            }
-        }
-        return null;
+        return dungeons.get(id);
     }
     public static Dungeon getFirstDung(){
         return dungeons.get(0);
@@ -155,14 +192,14 @@ public class DungeonManager {
         int all_w = 0;
         for(String id : ids){
 
-            System.out.println(""+id);
+            System.out.println(id);
             EnemyMob mob = mobs.get(id);
             m.add(new RollSlot<EnemyMob>(mob, mob.getWeight()));
             all_w+=mob.getWeight();
         }
-        Double w_point = 1.0/all_w;
+        double w_point = 1.0/all_w;
         Double random = rand.nextDouble();
-        Double used = 0.0;
+        double used = 0.0;
         for(RollSlot<EnemyMob> slot : m){
 
             slot.setTo(used+slot.getWeight()*w_point);

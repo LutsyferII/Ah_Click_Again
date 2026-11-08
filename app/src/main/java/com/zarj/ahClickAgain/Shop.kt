@@ -120,7 +120,7 @@ fun OpenBonus(sp : SharedPreferences, text: MutableState<String>){
                             )
                             Text("${Player.reb_coins}",color = Color.White)
                         }
-                        if(!Player.on_level.dung.id.equals("first")){
+                        if(!Player.on_level.dungID.id.equals("first")){
                             Button(onClick={
                                 expand_start.value = true
                             },

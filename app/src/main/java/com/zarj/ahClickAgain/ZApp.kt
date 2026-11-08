@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.SharedPreferences
 import com.zarj.ahClickAgain.Dungeon.DungeonManager
 import com.zarj.ahClickAgain.Dungeon.enemys.Boss
+import com.zarj.ahClickAgain.data.SaveManager
 import com.zarj.ahClickAgain.items.ItemsManager
 import com.zarj.ahClickAgain.items.effects.EffectsManager
 import com.zarj.ahClickAgain.market.Market
@@ -25,11 +26,12 @@ class ZApp : Application() {
         super.onCreate()
         inst = this
         Datar.load();
+        SaveManager.init(applicationContext)
         EffectsManager.load()
         ItemsManager.load()
         sharedPreferences = this.getSharedPreferences("SHKOTEL", MODE_PRIVATE)
         StaticMetrics.updateMectrics()
-        DungeonManager.create()
+        DungeonManager.create(applicationContext)
         WeaponManager.create()
         Market.create()
         PetManager.create(sharedPreferences)

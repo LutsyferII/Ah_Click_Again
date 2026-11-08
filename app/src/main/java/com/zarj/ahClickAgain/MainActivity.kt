@@ -117,8 +117,8 @@ class MainActivity : ComponentActivity() {
                     )
 
 
-                    var dung_text_1 = mutableStateOf("${Player.on_level.dung.name}")
-                    var dung_text_2 = mutableStateOf("${Player.on_level.dung.levelIndexPlus(Player.on_level.id)}/${Player.on_level.dung.levels.size} Exp ${formatNumb(Player.on_level.exp)}/${formatNumb(Player.on_level.need_exp ) }")
+                    var dung_text_1 = mutableStateOf("${Player.on_level.dungID.name}")
+                    var dung_text_2 = mutableStateOf("${Player.on_level.dungID.levelIndexPlus(Player.on_level.id)}/${Player.on_level.dungID.levels.size} Exp ${formatNumb(Player.on_level.exp)}/${formatNumb(Player.on_level.need_exp ) }")
                     val mob_id : String = Player.enemy.imgSource;
                     val draw = LocalContext.current.resources.getIdentifier(mob_id, "drawable", LocalContext.current.packageName)
                     val boss_button = remember {mutableStateOf(Player.on_level.exp>=Player.on_level.need_exp)}

@@ -214,7 +214,7 @@ public class Player implements Serializable {
 
     }
     public static long getHowManyGetOnRebirth(){
-        long reb_coins = (long) (Math.pow(10.0,DungeonManager.getDungIndex(on_level.getDung().getId()))*2.5);
+        long reb_coins = (long) (Math.pow(10.0,DungeonManager.getDungIndex(on_level.getDungID().getId()))*2.5);
         reb_coins+=on_level.getId()*(reb_coins/2)+coins/100;
        return  reb_coins;
     }

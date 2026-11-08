@@ -1,17 +1,9 @@
 package com.zarj.ahClickAgain.data
 
-import android.content.Context
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.preferencesDataStore
+
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
-import java.io.File
-import kotlinx.serialization.Serializable
 import java.util.concurrent.atomic.AtomicBoolean
 
 object DataEngine {
@@ -30,10 +22,6 @@ object DataEngine {
         }
     }
 
-    // Установка урона
-    fun setDamage(newDamage: Long) {
-        _state.update { it.copy(damage = newDamage) }
-    }
 
     fun setWholeState(newState: GameState) {
         _state.value = newState

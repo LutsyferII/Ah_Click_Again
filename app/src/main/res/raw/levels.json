@@ -1,0 +1,56 @@
+{
+  "level_1": {
+    "needExp": 50,
+    "mobIds": ["mob_1_1_0", "mob_1_1_1"],
+    "bossId": "boss_1_1",
+    "backgroundId": "back_1_1"
+  },
+  "level_2": {
+    "needExp": 120,
+    "mobIds": ["mob_1_2_0", "mob_1_2_1"],
+    "bossId": "boss_1_2",
+    "backgroundId": "back_1_2"
+  },
+  "level_3": {
+    "needExp": 250,
+    "mobIds": ["mob_2_1_0", "mob_2_1_1", "mob_2_1_2"],
+    "bossId": "boss_2_1",
+    "backgroundId": "back_1_3"
+  },
+  "level_4": {
+    "needExp": 1000,
+    "mobIds": ["mob_2_2_0", "mob_2_2_1", "mob_2_2_2", "mob_2_2_3"],
+    "bossId": "boss_2_2",
+    "backgroundId": "back_1_4"
+  },
+  "level_5": {
+    "needExp": 4000,
+    "mobIds": ["mob_2_3_0", "mob_2_3_1", "mob_2_3_2"],
+    "bossId": "boss_2_3",
+    "backgroundId": "back_1_5"
+  },
+  "level_6": {
+    "needExp": 20000,
+    "mobIds": ["mob_2_4_0", "mob_2_4_1", "mob_2_4_2", "mob_2_4_3"],
+    "bossId": "boss_2_4",
+    "backgroundId": "back_1_6"
+  },
+  "level_7": {
+    "needExp": 80000,
+    "mobIds": ["mob_3_1_0", "mob_3_1_1", "mob_3_1_2"],
+    "bossId": "boss_3_1",
+    "backgroundId": "back_1_7"
+  },
+  "level_8": {
+    "needExp": 200000,
+    "mobIds": ["mob_3_2_0", "mob_3_2_1", "mob_3_2_2"],
+    "bossId": "boss_3_2",
+    "backgroundId": "back_1_8"
+  },
+  "level_9": {
+    "needExp": 500000,
+    "mobIds": ["mob_3_3_0", "mob_3_3_1", "mob_3_3_2"],
+    "bossId": "boss_3_3",
+    "backgroundId": "back_1_9"
+  }
+}
